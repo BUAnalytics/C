@@ -1,2 +1,2 @@
-# C
-C implementation of the analytics client API
+# bg
+BU Games Analytics (C API)
