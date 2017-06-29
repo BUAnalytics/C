@@ -60,7 +60,6 @@ void bgCollectionUpload(char *cln)
   sstream *ser = sstream_new();
   sstream *url = sstream_new();
   struct bgCollection* c = bgCollectionGet(cln);
-  JSON_Value* v = NULL;
   size_t i = 0;
   int responseCode = 0;
 
@@ -69,8 +68,12 @@ void bgCollectionUpload(char *cln)
   /* Concatenating c_str onto ser - dangerous? */
   for(i = 0; i < vector_size(c->documents); i++)
   {
-    v = vector_at(c->documents,i)->rootVal;
-    sstream_push_cstr(ser, json_serialize_to_string(v));
+    JSON_Value* v = vector_at(c->documents,i)->rootVal;
+    char *serialized = json_serialize_to_string(v);
+
+    sstream_push_cstr(ser, serialized);
+    free(serialized); serialized = NULL;
+
     if(i < vector_size(c->documents)-1)
     {
       sstream_push_char(ser, ',');
