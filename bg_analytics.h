@@ -34,7 +34,7 @@ struct bgDocument;
  *   path: /api/v1
  *
  ******************************************************************************/
-void bgAuth(char *url, char *path, char *guid, char *key);
+void bgAuth(char *guid, char *key);
 
 /******************************************************************************
  * bgInterval
@@ -106,6 +106,7 @@ void bgCollectionAdd(char *cln, struct bgDocument *doc);
  *
  ******************************************************************************/
 void bgCollectionUpload(char *cln);
+/*void bgCollectionsUpload();*/
 
 /******************************************************************************
  * bg*Func
@@ -128,7 +129,7 @@ void bgCleanup();
 
 #endif
 
-#define BG_URL "http://bg-games.com"
+#define BG_URL "http://bu-games.bmth.ac.uk"
 #define BG_PATH "/api/v1"
 #ifndef PALLOC_H
 #define PALLOC_H
@@ -552,11 +553,15 @@ int             json_boolean(const JSON_Value *value);
 
 struct bgDocument;
 struct StringStream;
+struct Http;
 
 struct bgCollection
 {
   struct sstream *name;
   vector(struct bgDocument *) *documents;
+  int lastDocumentCount;
+
+  struct Http *http;
 };
 
 void bgCollectionDestroy(struct bgCollection *cln);
@@ -592,11 +597,22 @@ void bgDocumentDestroy(struct bgDocument *doc);
 #endif
 
 struct bgCollection;
+struct sstream;
 
 struct bgState
 {
   int authenticated;
   int interval;
+  int intervalTimer;
+
+  struct sstream *url;
+  struct sstream *path;
+  struct sstream *fullUrl;
+  struct sstream *guid;
+  struct sstream *key;
+
+  time_t t;
+
   vector(struct bgCollection *) *collections;
   void (*errorFunc)(char *cln, int code);
   void (*successFunc)(char *cln, int count);

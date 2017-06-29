@@ -880,6 +880,7 @@ void _HttpPollConnect(struct Http *ctx)
   }
 
   sstream_push_cstr(content, sstream_cstr(ctx->path));
+  /*TODO*/
   sstream_push_char(content, '?');
   sstream_push_cstr(content, sstream_cstr(ctx->query));
   sstream_push_cstr(content, " HTTP/1.0\r\n");
@@ -1290,19 +1291,26 @@ char *HttpResponseContent(struct Http *ctx)
 #include <stdio.h>
 #include <string.h>
 
+void bgUpdate();
+
 void bgCollectionCreate(char *cln)
 {
   struct bgCollection* newCln;
   newCln = palloc(struct bgCollection);
-  
+ 
   newCln->name = sstream_new();
   sstream_push_cstr(newCln->name, cln);
 
   newCln->documents = vector_new(struct bgDocument*);
-
   vector_push_back(bg->collections, newCln);
-  /*Do I then free newCln, under the assumption the memory has moved?*/
-  /*pfree(newCln);*/
+  newCln->lastDocumentCount = 0;
+
+  newCln->http = HttpCreate();
+  HttpAddCustomHeader(newCln->http, "AuthAccessKey", bg->guid);
+  HttpAddCustomHeader(newCln->http, "AuthAccessSecret", bg->key);
+  HttpAddCustomHeader(newCln->http, "Content-Type", "application/json;charset=utf-8");
+
+  bgUpdate();
 }
 
 void bgCollectionAdd(char *cln, struct bgDocument *doc)
@@ -1311,53 +1319,70 @@ void bgCollectionAdd(char *cln, struct bgDocument *doc)
 
   /* Again, could be more complex */
   doc = NULL;
+
+  bgUpdate();
 }
 
 void bgCollectionUpload(char *cln)
 {
-  //Serializing documents to c_str
-  char* ser = NULL;
+  /* For Serializing data */
+  sstream *ser = sstream_new();
+  sstream *url = sstream_new();
   struct bgCollection* c = bgCollectionGet(cln);
-  JSON_Value* v = vector_at(c->documents, 0)->rootVal;
+  JSON_Value* v = NULL;
   size_t i = 0;
-  ser = json_serialize_to_string_pretty(v);
+  int responseCode = 0;
 
-  // LEAK: ser must be free'd when no longer in use.
-  /*
-  if(ser != NULL)
-    puts(ser);
+  sstream_push_cstr(ser, "{\"documents\":[");
+
+  /* Concatenating c_str onto ser - dangerous? */
+  for(i = 0; i < vector_size(c->documents); i++)
+  {
+    v = vector_at(c->documents,i)->rootVal;
+    sstream_push_cstr(ser, json_serialize_to_string(v));
+    if(i < vector_size(c->documents)-1)
+    {
+      sstream_push_char(ser, ',');
+    }
+  } 
+
+  sstream_push_cstr(ser, "]}");
+
+  /* Sending request to server */
+  sstream_push_cstr(url, sstream_cstr(bg->fullUrl));
+  sstream_push_cstr(url, sstream_cstr(c->name));
+  sstream_push_cstr(url, "/documents");
+  HttpRequest(c->http, sstream_cstr(url), sstream_cstr(ser));
+  /* blocking while request pushes through */
+  while(!HttpRequestComplete(c->http))
+  {
+    /* blocking stuff */
+  }
+  /* Handle response */
+  responseCode = HttpResponseStatus(c->http);
+  if(responseCode != 200)
+  {
+    if(bg->errorFunc != NULL)
+      bg->errorFunc(sstream_cstr(c->name), responseCode);
+  }
   else
-    puts("\n! Serialization error\n");
-  */
+  {
+    if(bg->successFunc != NULL)
+      bg->successFunc(sstream_cstr(c->name), vector_size(c->documents));
 
-  //Send to server here
-  struct Http *http = NULL;
-  http = HttpCreate();
-
+  }
   
-
-
-  //Cleanup
-  pfree(ser);
-
+  /* Cleanup */
+  sstream_delete(ser);
+  sstream_delete(url);
 
   for(i = 0; i < vector_size(c->documents); i++)
   {
-    // NOTE: Should this need a NULL check?
-    if(vector_at(c->documents, i))
-    {
-      bgDocumentDestroy(vector_at(c->documents, i));
-    }
+    bgDocumentDestroy(vector_at(c->documents, i));
   }
 
-  //Clearing for later use
+  /* Clearing vector for later use */
   vector_clear(c->documents);
-}
-
-void bgCollectionSaveAndDestroy(struct bgCollection *cln)
-{
-  bgCollectionUpload(sstream_cstr(cln->name));
-  bgCollectionDestroy(cln);
 }
 
 /* Destroys collection and containing documents w/o upload */
@@ -1369,27 +1394,33 @@ void bgCollectionDestroy(struct bgCollection *cln)
   {
     for(i = 0; i < vector_size(cln->documents); i++)
     {
-      if(vector_at(cln->documents, i))
-      {
-        bgDocumentDestroy(vector_at(cln->documents, i));
-      }
+      bgDocumentDestroy(vector_at(cln->documents, i));
     }
     vector_delete(cln->documents);
   }
 
   sstream_delete(cln->name);
+  HttpDestroy(cln->http);
 
   pfree(cln);
 
   cln = NULL;
 }
-/*
-  Helper function to get the collection from the state by name 
-  returns NULL if no collection by cln exists
+
+/*  Helper function to get the collection from the state by name 
+ *  returns NULL if no collection by cln exists
 */
 struct bgCollection *bgCollectionGet(char *cln)
 {
+  /* 
+   * TODO - Change to comparing char* directly
+   *  then fall back onto strcmp if failure
+   *  
+   *  Although, would this still work as name
+   *  is a sstream?
+  */
   size_t i = 0;
+
   for(i = 0; i < vector_size(bg->collections); i++)
   {
     if(strcmp(cln, sstream_cstr(vector_at(bg->collections, i)->name)) == 0)
@@ -1397,19 +1428,20 @@ struct bgCollection *bgCollectionGet(char *cln)
       return vector_at(bg->collections, i);
     }
   }
-
+  
   return NULL;
 }
 
 #ifndef AMALGAMATION
   #include "Document.h"
+  #include "State.h"
   #include "parson.h"
 
   #include <palloc/palloc.h>
   #include <palloc/sstream.h>
 #endif
 
-//#include <stdlib.h>
+void bgUpdate();
 
 struct bgDocument *bgDocumentCreate()
 {
@@ -1419,7 +1451,7 @@ struct bgDocument *bgDocumentCreate()
 
   rtn->rootVal = json_value_init_object();
   rtn->rootObj = json_value_get_object(rtn->rootVal);
-  rtn->rootArr = json_value_get_array(rtn->rootVal);
+  //rtn->rootArr = json_value_get_array(rtn->rootVal);
 
   return rtn;
 }
@@ -1430,7 +1462,7 @@ void bgDocumentDestroy(struct bgDocument *doc)
   json_value_free(doc->rootVal);
 
   // LEAK:
-  // pfree(doc)?
+  pfree(doc);
 }
 
 void bgDocumentAddCStr(struct bgDocument *doc, char *path, char *val)
@@ -1438,26 +1470,9 @@ void bgDocumentAddCStr(struct bgDocument *doc, char *path, char *val)
   sstream* ctx = sstream_new();
   size_t i = 0;
   vector(sstream*) *out = vector_new(sstream*); 
-  
-  JSON_Status status = 5;
 
   sstream_push_cstr(ctx, path);
   sstream_split(ctx, '.', out);
- 
-  if(vector_size(out) == 0)
-  {
-    status = json_object_set_string(doc->rootObj, path, val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
-  else
-  {
-    status = json_object_dotset_string(doc->rootObj, path, val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
 
   sstream_delete(ctx);
   if(vector_size(out) > 0)
@@ -1471,6 +1486,8 @@ void bgDocumentAddCStr(struct bgDocument *doc, char *path, char *val)
     }
   }
   vector_delete(out);
+
+  bgUpdate();
 }
 
 void bgDocumentAddInt(struct bgDocument *doc, char *path, int val)
@@ -1478,26 +1495,9 @@ void bgDocumentAddInt(struct bgDocument *doc, char *path, int val)
   sstream* ctx = sstream_new();
   size_t i = 0;
   vector(sstream*) *out = vector_new(sstream*); 
-  
-  JSON_Status status = 5;
-  
+
   sstream_push_cstr(ctx, path);
   sstream_split(ctx, '.', out);
- 
-  if(vector_size(out) == 0)
-  {
-    status = json_object_set_number(doc->rootObj, path, (int)val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
-  else
-  {
-    status = json_object_dotset_number(doc->rootObj, path, (int)val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
 
   sstream_delete(ctx);
   if(vector_size(out) > 0)
@@ -1511,6 +1511,8 @@ void bgDocumentAddInt(struct bgDocument *doc, char *path, int val)
     }
   }
   vector_delete(out);
+
+  bgUpdate();
 }
 
 void bgDocumentAddDouble(struct bgDocument *doc, char *path, double val)
@@ -1519,25 +1521,8 @@ void bgDocumentAddDouble(struct bgDocument *doc, char *path, double val)
   size_t i = 0;
   vector(sstream*) *out = vector_new(sstream*); 
   
-  JSON_Status status = 5;
-  
   sstream_push_cstr(ctx, path);
   sstream_split(ctx, '.', out);
- 
-  if(vector_size(out) == 0)
-  {
-    status = json_object_set_number(doc->rootObj, path, val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
-  else
-  {
-    status = json_object_dotset_number(doc->rootObj, path, val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
 
   sstream_delete(ctx);
   if(vector_size(out) > 0)
@@ -1551,6 +1536,8 @@ void bgDocumentAddDouble(struct bgDocument *doc, char *path, double val)
     }
   }
   vector_delete(out);
+
+  bgUpdate();
 }
 
 void bgDocumentAddBool(struct bgDocument *doc, char *path, int val)
@@ -1558,26 +1545,9 @@ void bgDocumentAddBool(struct bgDocument *doc, char *path, int val)
   sstream* ctx = sstream_new();
   size_t i = 0;
   vector(sstream*) *out = vector_new(sstream*); 
-  
-  JSON_Status status = 5;
-  
+
   sstream_push_cstr(ctx, path);
   sstream_split(ctx, '.', out);
- 
-  if(vector_size(out) == 0)
-  {
-    status = json_object_set_boolean(doc->rootObj, path, val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
-  else
-  {
-    status = json_object_dotset_boolean(doc->rootObj, path, val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
 
   sstream_delete(ctx);
   if(vector_size(out) > 0)
@@ -1591,6 +1561,8 @@ void bgDocumentAddBool(struct bgDocument *doc, char *path, int val)
     }
   }
   vector_delete(out);
+
+  bgUpdate();
 }
 
 /*
@@ -3600,36 +3572,135 @@ void json_set_allocation_functions(JSON_Malloc_Function malloc_fun, JSON_Free_Fu
 }
 
 #ifndef AMALGAMATION
-  #include "config.h"
-  #include "State.h"
-  #include "Collection.h"
-  #include "parson.h"
+#include "config.h"
+#include "State.h"
+#include "Collection.h"
+#include "Document.h"
+#include "parson.h"
+#include "http/http.h"
 
-  #include <palloc/palloc.h>
+#include "palloc/sstream.h"
+#include <palloc/palloc.h>
 #endif
+
+#include <time.h>
+#include <string.h>
 
 struct bgState *bg;
 
+/* Find out where error/success callbacks should be called
+in this particular function
+*/
+void bgUpdate()
+{
+  /* For updating interval */
+  size_t i = 0;
+  time_t tNow = time(NULL);
+
+  /* Updating Interval */
+  bg->intervalTimer -= (tNow - bg->t)*1000;
+  bg->t = tNow;
+
+  /* Polling collections http connections to push through data */
+  for(i = 0; i < vector_size(bg->collections); i++)
+  {
+    if(vector_at(bg->collections, i))
+    {
+      HttpRequestComplete(vector_at(bg->collections, i)->http);
+    }
+  }
+
+  /* Pushing data if interval is done */
+  if(bg->intervalTimer <= 0)
+  {
+    int successes = 0;
+    sstream *ser = sstream_new();
+    sstream *url = sstream_new();
+
+    /* Upload collections */
+    for(i = 0; i < vector_size(bg->collections); i++)
+    {
+      JSON_Value* v = NULL;
+      size_t j = 0;
+      struct bgCollection* c = vector_at(bg->collections, i);
+
+      //TODO continue if no data to send
+      if(vector_size(c->documents) == 0)
+      {
+        continue;
+      }
+
+      if(HttpRequestComplete(c->http))
+      {
+        if(HttpResponseStatus(c->http) == 200)
+        {
+          bg->successFunc(sstream_cstr(c->name), c->lastDocumentCount);
+        }
+
+        sstream_push_cstr(ser, "{\"documents\":[");
+
+        /* Serializing documents of collection */
+        for(j = 0; j < vector_size(c->documents); j++)
+        {
+          v = vector_at(c->documents, j)->rootVal;
+          sstream_push_cstr(ser, json_serialize_to_string(v));
+          if(i < vector_size(c->documents)-1)
+          {
+            sstream_push_char(ser, ',');
+          }
+        }
+
+        sstream_push_cstr(ser, "]}");
+
+        sstream_clear(url);
+        sstream_push_cstr(url, sstream_cstr(bg->fullUrl));
+        sstream_push_cstr(url, sstream_cstr(c->name));
+        sstream_push_cstr(url, "/documents");
+        HttpRequest(c->http, sstream_cstr(url), sstream_cstr(ser));
+        sstream_clear(ser);
+
+        c->lastDocumentCount = vector_size(c->documents);
+        for(j = 0; j < vector_size(c->documents); j++)
+        {
+          bgDocumentDestroy(vector_at(c->documents, j));
+        }
+        vector_clear(c->documents);
+      }
+    }
+
+    /* Cleaning up sstream */
+    sstream_delete(ser);
+
+    /* Resetting intervalTimer */
+    bg->intervalTimer = bg->interval;
+  }
+}
+
 void bgAuth(char *guid, char *key)
 {
-  /*
-ANN_NEW(bg,
-  bg = calloc(1, sizeof(*bg));
-)
-ANN_INC(bg->collections,
-  bg->collections = vector_create(struct bgCollection *);
-)
-  bg->interval = 2000;
-  */
   bg = palloc(struct bgState);
   bg->collections = vector_new(struct bgCollection *);
   bg->interval = 2000;
+
+  bg->url = sstream_new();
+  sstream_push_cstr(bg->url, BG_URL);
+
+  bg->path = sstream_new();
+  sstream_push_cstr(bg->path, BG_PATH);
+
+  bg->fullUrl = sstream_new();
+  sstream_push_cstr(bg->fullUrl, sstream_cstr(bg->url));
+  sstream_push_cstr(bg->fullUrl, sstream_cstr(bg->path));
+  sstream_push_cstr(bg->fullUrl, "/projects/collections/");
+
+  //TODO move to sstream and delete guid+key
+  //bg->guid = guid;
+  //bg->key = key;
+  bg->guid = sstream_new();
+  sstream_push_cstr(bg->guid, guid);
   
-  /* I'm sure there's a way to do this
-#ifdef PALLOC_ACTIVE
-  json_set_allocation_functions(palloc(), pfree);
-#endif
-  */
+  bg->key = sstream_new();
+  sstream_push_cstr(bg->key, key);
 }
 
 void bgCleanup()
@@ -3645,7 +3716,13 @@ void bgCleanup()
     bgCollectionDestroy(vector_at(bg->collections, i));
   }
   vector_delete(bg->collections);
-  
+
+  sstream_delete(bg->url);
+  sstream_delete(bg->path);
+  sstream_delete(bg->fullUrl);
+  sstream_delete(bg->guid);
+  sstream_delete(bg->key);
+
   pfree(bg);
 }
 
@@ -3663,4 +3740,5 @@ void bgSuccessFunc(void (*successFunc)(char *cln, int count))
 {
   bg->successFunc = successFunc;
 }
+
 
