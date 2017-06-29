@@ -31,8 +31,8 @@ void bgCollectionCreate(char *cln)
   vector_push_back(bg->collections, newCln);
 
   newCln->http = HttpCreate();
-  HttpAddCustomHeader(newCln->http, "AuthAccessKey", bg->guid);
-  HttpAddCustomHeader(newCln->http, "AuthAccessSecret", bg->key);
+  HttpAddCustomHeader(newCln->http, "AuthAccessKey", sstream_cstr(bg->guid));
+  HttpAddCustomHeader(newCln->http, "AuthAccessSecret", sstream_cstr(bg->key));
   HttpAddCustomHeader(newCln->http, "Content-Type", "application/json;charset=utf-8");
 
   bgUpdate();
