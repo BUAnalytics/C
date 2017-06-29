@@ -12,7 +12,7 @@ void bgUpdate();
 struct bgDocument *bgDocumentCreate()
 {
   struct bgDocument *rtn = NULL;
- 
+
   rtn = palloc(struct bgDocument);
 
   rtn->rootVal = json_value_init_object();
@@ -27,7 +27,6 @@ void bgDocumentDestroy(struct bgDocument *doc)
   /*unwinds json_val list structure and frees memory*/
   json_value_free(doc->rootVal);
 
-  // LEAK:
   pfree(doc);
 }
 
@@ -35,13 +34,12 @@ void bgDocumentAddCStr(struct bgDocument *doc, char *path, char *val)
 {
   sstream* ctx = sstream_new();
   size_t i = 0;
-  vector(sstream*) *out = vector_new(sstream*); 
-  
-  JSON_Status status = 5;
+  vector(sstream *) *out = vector_new(sstream *);
+  JSON_Status status = 0;
 
   sstream_push_cstr(ctx, path);
   sstream_split(ctx, '.', out);
- 
+
   if(vector_size(out) == 0)
   {
     status = json_object_set_string(doc->rootObj, path, val);
@@ -58,6 +56,7 @@ void bgDocumentAddCStr(struct bgDocument *doc, char *path, char *val)
   }
 
   sstream_delete(ctx);
+
   if(vector_size(out) > 0)
   {
     for(i = 0; i < vector_size(out); i++)
@@ -68,8 +67,8 @@ void bgDocumentAddCStr(struct bgDocument *doc, char *path, char *val)
       }
     }
   }
-  vector_delete(out);
 
+  vector_delete(out);
   bgUpdate();
 }
 
@@ -77,13 +76,12 @@ void bgDocumentAddInt(struct bgDocument *doc, char *path, int val)
 {
   sstream* ctx = sstream_new();
   size_t i = 0;
-  vector(sstream*) *out = vector_new(sstream*); 
-  
-  JSON_Status status = 5;
-  
+  vector(sstream *) *out = vector_new(sstream *);
+  JSON_Status status = 0;
+
   sstream_push_cstr(ctx, path);
   sstream_split(ctx, '.', out);
- 
+
   if(vector_size(out) == 0)
   {
     status = json_object_set_number(doc->rootObj, path, (int)val);
@@ -100,6 +98,7 @@ void bgDocumentAddInt(struct bgDocument *doc, char *path, int val)
   }
 
   sstream_delete(ctx);
+
   if(vector_size(out) > 0)
   {
     for(i = 0; i < vector_size(out); i++)
@@ -110,8 +109,8 @@ void bgDocumentAddInt(struct bgDocument *doc, char *path, int val)
       }
     }
   }
-  vector_delete(out);
 
+  vector_delete(out);
   bgUpdate();
 }
 
@@ -119,13 +118,12 @@ void bgDocumentAddDouble(struct bgDocument *doc, char *path, double val)
 {
   sstream* ctx = sstream_new();
   size_t i = 0;
-  vector(sstream*) *out = vector_new(sstream*); 
-  
-  JSON_Status status = 5;
-  
+  vector(sstream *) *out = vector_new(sstream *);
+  JSON_Status status = 0;
+
   sstream_push_cstr(ctx, path);
   sstream_split(ctx, '.', out);
- 
+
   if(vector_size(out) == 0)
   {
     status = json_object_set_number(doc->rootObj, path, val);
@@ -142,6 +140,7 @@ void bgDocumentAddDouble(struct bgDocument *doc, char *path, double val)
   }
 
   sstream_delete(ctx);
+
   if(vector_size(out) > 0)
   {
     for(i = 0; i < vector_size(out); i++)
@@ -152,8 +151,8 @@ void bgDocumentAddDouble(struct bgDocument *doc, char *path, double val)
       }
     }
   }
-  vector_delete(out);
 
+  vector_delete(out);
   bgUpdate();
 }
 
@@ -161,13 +160,12 @@ void bgDocumentAddBool(struct bgDocument *doc, char *path, int val)
 {
   sstream* ctx = sstream_new();
   size_t i = 0;
-  vector(sstream*) *out = vector_new(sstream*); 
-  
-  JSON_Status status = 5;
-  
+  vector(sstream *) *out = vector_new(sstream *);
+  JSON_Status status = 0;
+
   sstream_push_cstr(ctx, path);
   sstream_split(ctx, '.', out);
- 
+
   if(vector_size(out) == 0)
   {
     status = json_object_set_boolean(doc->rootObj, path, val);
@@ -184,6 +182,7 @@ void bgDocumentAddBool(struct bgDocument *doc, char *path, int val)
   }
 
   sstream_delete(ctx);
+
   if(vector_size(out) > 0)
   {
     for(i = 0; i < vector_size(out); i++)
@@ -194,7 +193,8 @@ void bgDocumentAddBool(struct bgDocument *doc, char *path, int val)
       }
     }
   }
-  vector_delete(out);
 
+  vector_delete(out);
   bgUpdate();
 }
+

@@ -1,13 +1,13 @@
 #ifndef AMALGAMATION
-#include "config.h"
-#include "State.h"
-#include "Collection.h"
-#include "Document.h"
-#include "parson.h"
-#include "http/http.h"
+  #include "config.h"
+  #include "State.h"
+  #include "Collection.h"
+  #include "Document.h"
+  #include "parson.h"
+  #include "http/http.h"
 
-#include "palloc/sstream.h"
-#include <palloc/palloc.h>
+  #include "palloc/sstream.h"
+  #include <palloc/palloc.h>
 #endif
 
 #include <time.h>
@@ -16,8 +16,8 @@
 struct bgState *bg;
 
 /* Find out where error/success callbacks should be called
-in this particular function
-*/
+ * in this particular function
+ */
 void bgUpdate()
 {
   /* For updating interval */
@@ -25,7 +25,7 @@ void bgUpdate()
   time_t tNow = time(NULL);
 
   /* Updating Interval */
-  bg->intervalTimer -= (tNow - bg->t)*1000;
+  bg->intervalTimer -= (tNow - bg->t) * 1000;
   bg->t = tNow;
 
   /* Polling collections http connections to push through data */
@@ -43,6 +43,7 @@ void bgUpdate()
     int successes = 0;
     sstream *ser = sstream_new();
     sstream *url = sstream_new();
+
     /* Upload collections */
     for(i = 0; i < vector_size(bg->collections); i++)
     {
@@ -56,7 +57,10 @@ void bgUpdate()
       {
         if(HttpResponseStatus(c->http) == 200)
         {
-          bg->successFunc(sstream_cstr(c->name), c->lastDocumentCount);
+          if(bg->successFunc)
+          {
+            bg->successFunc(sstream_cstr(c->name), c->lastDocumentCount);
+          }
         }
 
         /* Serializing documents of collection */
@@ -74,10 +78,12 @@ void bgUpdate()
         sstream_clear(ser);
 
         c->lastDocumentCount = vector_size(c->documents);
+
         for(j = 0; j < vector_size(c->documents); j++)
         {
           bgDocumentDestroy(vector_at(c->documents, j));
         }
+
         vector_clear(c->documents);
       }
     }
@@ -112,15 +118,17 @@ void bgAuth(char *guid, char *key)
 void bgCleanup()
 {
   /*
-  Looping throough and calling 'destructor'
-  and then deleting remnants with vector_delete
-  */
+   * Looping throough and calling 'destructor'
+   * and then deleting remnants with vector_delete
+   */
   size_t i = 0;
+
   for(i = 0; i < vector_size(bg->collections); i ++)
   {
     /*NULLS pointer in function*/
     bgCollectionDestroy(vector_at(bg->collections, i));
   }
+
   vector_delete(bg->collections);
 
   pfree(bg->url);
