@@ -69,10 +69,11 @@ void bgCollectionUpload(char *cln)
   /* Concatenating c_str onto ser - dangerous? */
   for(i = 0; i < vector_size(c->documents); i++)
   {
-    if(vector_at(c->documents, i))
+    v = vector_at(c->documents,i)->rootVal;
+    sstream_push_cstr(ser, json_serialize_to_string(v));
+    if(i < vector_size(c->documents)-1)
     {
-      v = vector_at(c->documents,i)->rootVal;
-      sstream_push_cstr(ser, json_serialize_to_string(v));
+      sstream_push_char(ser, ',');
     }
   }
 
