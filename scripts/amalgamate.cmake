@@ -34,5 +34,9 @@ cat(src/bg/parson.c ${SOURCE_OUT})
 cat(src/bg/State.c ${SOURCE_OUT})
 
 file(COPY src/example/main.c DESTINATION .)
+
 file(RENAME main.c example.c)
 execute_process(COMMAND gcc -oexample -DAMALGAMATION_EXAMPLE bg_analytics.c example.c)
+
+#file(RENAME main.c example.cpp)
+#execute_process(COMMAND g++ -oexample -DAMALGAMATION_EXAMPLE bg_analytics.cpp example.cpp)

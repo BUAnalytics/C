@@ -31,7 +31,7 @@ void HttpDestroy(struct Http *ctx);
 /*
 void HttpSetResponseTimeout(struct Http *ctx, int timeout);
 */
-void HttpAddCustomHeader(struct Http *ctx, char *variable, char *value);
+void HttpAddCustomHeader(struct Http *ctx, const char *variable, const char *value);
 
 void HttpRequest(struct Http *ctx, char *url, char *post);
 int HttpRequestComplete(struct Http *ctx);

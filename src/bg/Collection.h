@@ -20,6 +20,6 @@ struct bgCollection
 };
 
 void bgCollectionDestroy(struct bgCollection *cln);
-struct bgCollection *bgCollectionGet(char* cln);
+struct bgCollection *bgCollectionGet(const char* cln);
 
 #endif

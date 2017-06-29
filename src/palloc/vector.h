@@ -19,7 +19,7 @@ struct _Vector
 #define vector(T) \
   T*
 
-void *_VectorNew(size_t size, char *type);
+void *_VectorNew(size_t size, const char *type);
 int _VectorOobAssert(void *_vh, size_t idx);
 void _VectorErase(void *_vh, void *_v, size_t idx);
 void _VectorResize(void *_vh, void *_v, size_t size);

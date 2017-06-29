@@ -105,7 +105,7 @@ void pfree(void *ptr)
 #endif
 
 #ifdef PALLOC_ACTIVE
-void *_palloc(size_t size, char *type)
+void *_palloc(size_t size, const char *type)
 {
   struct PoolEntry *entry = poolHead;
 
@@ -162,7 +162,7 @@ void *_palloc(size_t size, char *type)
 #ifdef PALLOC_DEBUG
   printf("Allocating: %s\n", type);
 #endif
-  entry = calloc(1, sizeof(*entry));
+  entry = (struct PoolEntry *)calloc(1, sizeof(*entry));
   if(!entry) return NULL;
 
   entry->ptr = calloc(1, size);
@@ -174,7 +174,7 @@ void *_palloc(size_t size, char *type)
   }
 
   entry->size = size;
-  entry->type = calloc(strlen(type) + 1, sizeof(char));
+  entry->type = (char *)calloc(strlen(type) + 1, sizeof(char));
   strcpy(entry->type, type);
   entry->used = 1;
 
@@ -201,7 +201,7 @@ void *_palloc(size_t size, char *type)
 
 #include <string.h>
 
-void *_VectorNew(size_t size, char *type)
+void *_VectorNew(size_t size, const char *type)
 {
   struct _Vector *rtn = NULL;
   char typeStr[256] = {0};
@@ -209,12 +209,12 @@ void *_VectorNew(size_t size, char *type)
   strcpy(typeStr, "vector(");
   strcat(typeStr, type);
   strcat(typeStr, ")");
-  rtn = _palloc(sizeof(*rtn), typeStr);
+  rtn = (struct _Vector *)_palloc(sizeof(*rtn), typeStr);
 
   strcpy(typeStr, "vector_header(");
   strcat(typeStr, type);
   strcat(typeStr, ")");
-  rtn->vh = _palloc(sizeof(*rtn->vh), typeStr);
+  rtn->vh = (struct _VectorHeader *)_palloc(sizeof(*rtn->vh), typeStr);
   rtn->vh->entrySize = size;
 
   return rtn;
@@ -222,7 +222,7 @@ void *_VectorNew(size_t size, char *type)
 
 int _VectorOobAssert(void *_vh, size_t idx)
 {
-  struct _VectorHeader *vh = _vh;
+  struct _VectorHeader *vh = (struct _VectorHeader *)_vh;
 
   if(vh->size <= idx)
   {
@@ -235,8 +235,8 @@ int _VectorOobAssert(void *_vh, size_t idx)
 
 void _VectorErase(void *_vh, void *_v, size_t idx)
 {
-  struct _VectorHeader *vh = _vh;
-  struct _Vector *v = _v;
+  struct _VectorHeader *vh = (struct _VectorHeader *)_vh;
+  struct _Vector *v = (struct _Vector *)_v;
   size_t restSize = (vh->size - (idx + 1)) * vh->entrySize;
 
   _VectorOobAssert(_vh, idx);
@@ -253,8 +253,8 @@ void _VectorErase(void *_vh, void *_v, size_t idx)
 
 void _VectorResize(void *_vh, void *_v, size_t size)
 {
-  struct _Vector *v = _v;
-  struct _VectorHeader *vh = _vh;
+  struct _Vector *v = (struct _Vector *)_v;
+  struct _VectorHeader *vh = (struct _VectorHeader *)_vh;
 
   if(vh->size == size)
   {
@@ -291,9 +291,9 @@ void _VectorResize(void *_vh, void *_v, size_t size)
       printf("Error: Failed to reallocate\n");
     }
 
-    cur = v->data;
+    cur = (char *)v->data;
     cur += vh->size * vh->entrySize;
-    last = v->data;
+    last = (char *)v->data;
     last += size * vh->entrySize;
 
     while(cur != last)
@@ -308,15 +308,15 @@ void _VectorResize(void *_vh, void *_v, size_t size)
 
 size_t _VectorSize(void *_vh)
 {
-  struct _VectorHeader *vh = _vh;
+  struct _VectorHeader *vh = (struct _VectorHeader *)_vh;
 
   return vh->size;
 }
 
 void _VectorDelete(void *_vh, void *_v)
 {
-  struct _Vector *v = _v;
-  struct _VectorHeader *vh = _vh;
+  struct _Vector *v = (struct _Vector *)_v;
+  struct _VectorHeader *vh = (struct _VectorHeader *)_vh;
 
   if(v->vh != vh)
   {
@@ -428,7 +428,7 @@ void sstream_push_char(struct sstream *ctx, char val)
   curr->next = nc;
 }
 
-void sstream_push_cstr(struct sstream *ctx, char *s)
+void sstream_push_cstr(struct sstream *ctx, const char *s)
 {
   struct Chunk *nc = NULL;
   struct Chunk *curr = NULL;
@@ -437,7 +437,7 @@ void sstream_push_cstr(struct sstream *ctx, char *s)
   if(len < 1) return;
 
   nc = palloc(struct Chunk);
-  nc->s = malloc(sizeof(char) * (len + 1));
+  nc->s = (char *)malloc(sizeof(char) * (len + 1));
   strcpy(nc->s, s);
   nc->len = len;
 
@@ -477,7 +477,7 @@ void sstream_collate(struct sstream *ctx)
   }
 
   allocSize++;
-  ns = malloc(allocSize * sizeof(char));
+  ns = (char *)malloc(allocSize * sizeof(char));
   ns[0] = '\0';
   curr = ctx->first;
 
@@ -511,7 +511,8 @@ char *sstream_cstr(struct sstream *ctx)
 {
   sstream_collate(ctx);
 
-  if(!ctx->first) return "";
+  /* TODO */
+  if(!ctx->first) return (char *)"";
 
   return ctx->first->s;
 }
@@ -557,7 +558,7 @@ void sstream_push_chars(struct sstream *ctx, char *values, size_t count)
 {
   char *tmp = NULL;
 
-  tmp = malloc(sizeof(char) * (count + 1));
+  tmp = (char *)malloc(sizeof(char) * (count + 1));
   tmp[count] = 0;
   memcpy(tmp, values, sizeof(char) * count);
   sstream_push_cstr(ctx, tmp);
@@ -668,7 +669,7 @@ struct Http
   int status;
 };
 
-void HttpAddCustomHeader(struct Http *ctx, char *variable, char *value)
+void HttpAddCustomHeader(struct Http *ctx, const char *variable, const char *value)
 {
   struct CustomHeader ch = {0};
 
@@ -819,7 +820,7 @@ void _HttpPollConnect(struct Http *ctx)
       int optval = 0;
       int optlen = sizeof(optval);
 #ifdef USE_POSIX
-      if(getsockopt(sock, SOL_SOCKET, SO_ERROR, &optval, &optlen) == -1)
+      if(getsockopt(sock, SOL_SOCKET, SO_ERROR, &optval, (socklen_t *)&optlen) == -1)
 #endif
 #ifdef USE_WINSOCK
       if(getsockopt(sock, SOL_SOCKET, SO_ERROR, (char*)&optval, &optlen) == -1)
@@ -1304,7 +1305,7 @@ char *HttpResponseContent(struct Http *ctx)
 
 void bgUpdate();
 
-void bgCollectionCreate(char *cln)
+void bgCollectionCreate(const char *cln)
 {
   struct bgCollection* newCln = NULL;
 
@@ -1324,7 +1325,7 @@ void bgCollectionCreate(char *cln)
   bgUpdate();
 }
 
-void bgCollectionAdd(char *cln, struct bgDocument *doc)
+void bgCollectionAdd(const char *cln, struct bgDocument *doc)
 {
   struct bgCollection *col = bgCollectionGet(cln);
 
@@ -1340,13 +1341,12 @@ void bgCollectionAdd(char *cln, struct bgDocument *doc)
   bgUpdate();
 }
 
-void bgCollectionUpload(char *cln)
+void bgCollectionUpload(const char *cln)
 {
   /* For Serializing data */
   sstream *ser = sstream_new();
   sstream *url = sstream_new();
   struct bgCollection* c = bgCollectionGet(cln);
-  JSON_Value* v = NULL;
   size_t i = 0;
   int responseCode = 0;
 
@@ -1355,8 +1355,12 @@ void bgCollectionUpload(char *cln)
   /* Concatenating c_str onto ser - dangerous? */
   for(i = 0; i < vector_size(c->documents); i++)
   {
-    v = vector_at(c->documents,i)->rootVal;
-    sstream_push_cstr(ser, json_serialize_to_string(v));
+    JSON_Value* v = vector_at(c->documents,i)->rootVal;
+    char *serialized = json_serialize_to_string(v);
+
+    sstream_push_cstr(ser, serialized);
+    free(serialized); serialized = NULL;
+
     if(i < vector_size(c->documents)-1)
     {
       sstream_push_char(ser, ',');
@@ -1437,7 +1441,7 @@ void bgCollectionDestroy(struct bgCollection *cln)
 /*  Helper function to get the collection from the state by name
  *  returns NULL if no collection by cln exists
  */
-struct bgCollection *bgCollectionGet(char *cln)
+struct bgCollection *bgCollectionGet(const char *cln)
 {
   /*
    * TODO - Change to comparing char* directly
@@ -1492,7 +1496,7 @@ void bgDocumentDestroy(struct bgDocument *doc)
   pfree(doc);
 }
 
-void bgDocumentAddCStr(struct bgDocument *doc, char *path, char *val)
+void bgDocumentAddCStr(struct bgDocument *doc, const char *path, const char *val)
 {
   sstream* ctx = sstream_new();
   vector(sstream *) *out = vector_new(sstream *);
@@ -1518,7 +1522,7 @@ void bgDocumentAddCStr(struct bgDocument *doc, char *path, char *val)
   bgUpdate();
 }
 
-void bgDocumentAddInt(struct bgDocument *doc, char *path, int val)
+void bgDocumentAddInt(struct bgDocument *doc, const char *path, int val)
 {
   sstream* ctx = sstream_new();
   vector(sstream *) *out = vector_new(sstream *);
@@ -1544,7 +1548,7 @@ void bgDocumentAddInt(struct bgDocument *doc, char *path, int val)
   bgUpdate();
 }
 
-void bgDocumentAddDouble(struct bgDocument *doc, char *path, double val)
+void bgDocumentAddDouble(struct bgDocument *doc, const char *path, double val)
 {
   sstream* ctx = sstream_new();
   size_t i = 0;
@@ -1569,7 +1573,7 @@ void bgDocumentAddDouble(struct bgDocument *doc, char *path, double val)
   bgUpdate();
 }
 
-void bgDocumentAddBool(struct bgDocument *doc, char *path, int val)
+void bgDocumentAddBool(struct bgDocument *doc, const char *path, int val)
 {
   sstream* ctx = sstream_new();
   vector(sstream *) *out = vector_new(sstream *);
@@ -3712,7 +3716,7 @@ void bgUpdate()
   }
 }
 
-void bgAuth(char *guid, char *key)
+void bgAuth(const char *guid, const char *key)
 {
   bg = palloc(struct bgState);
   bg->collections = vector_new(struct bgCollection *);
@@ -3769,12 +3773,12 @@ void bgInterval(int milli)
   bg->interval = milli;
 }
 
-void bgErrorFunc(void (*errorFunc)(char *cln, int code))
+void bgErrorFunc(void (*errorFunc)(const char *cln, int code))
 {
   bg->errorFunc = errorFunc;
 }
 
-void bgSuccessFunc(void (*successFunc)(char *cln, int count))
+void bgSuccessFunc(void (*successFunc)(const char *cln, int count))
 {
   bg->successFunc = successFunc;
 }

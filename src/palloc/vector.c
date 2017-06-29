@@ -5,7 +5,7 @@
 
 #include <string.h>
 
-void *_VectorNew(size_t size, char *type)
+void *_VectorNew(size_t size, const char *type)
 {
   struct _Vector *rtn = NULL;
   char typeStr[256] = {0};
@@ -13,12 +13,12 @@ void *_VectorNew(size_t size, char *type)
   strcpy(typeStr, "vector(");
   strcat(typeStr, type);
   strcat(typeStr, ")");
-  rtn = _palloc(sizeof(*rtn), typeStr);
+  rtn = (struct _Vector *)_palloc(sizeof(*rtn), typeStr);
 
   strcpy(typeStr, "vector_header(");
   strcat(typeStr, type);
   strcat(typeStr, ")");
-  rtn->vh = _palloc(sizeof(*rtn->vh), typeStr);
+  rtn->vh = (struct _VectorHeader *)_palloc(sizeof(*rtn->vh), typeStr);
   rtn->vh->entrySize = size;
 
   return rtn;
@@ -26,7 +26,7 @@ void *_VectorNew(size_t size, char *type)
 
 int _VectorOobAssert(void *_vh, size_t idx)
 {
-  struct _VectorHeader *vh = _vh;
+  struct _VectorHeader *vh = (struct _VectorHeader *)_vh;
 
   if(vh->size <= idx)
   {
@@ -39,8 +39,8 @@ int _VectorOobAssert(void *_vh, size_t idx)
 
 void _VectorErase(void *_vh, void *_v, size_t idx)
 {
-  struct _VectorHeader *vh = _vh;
-  struct _Vector *v = _v;
+  struct _VectorHeader *vh = (struct _VectorHeader *)_vh;
+  struct _Vector *v = (struct _Vector *)_v;
   size_t restSize = (vh->size - (idx + 1)) * vh->entrySize;
 
   _VectorOobAssert(_vh, idx);
@@ -57,8 +57,8 @@ void _VectorErase(void *_vh, void *_v, size_t idx)
 
 void _VectorResize(void *_vh, void *_v, size_t size)
 {
-  struct _Vector *v = _v;
-  struct _VectorHeader *vh = _vh;
+  struct _Vector *v = (struct _Vector *)_v;
+  struct _VectorHeader *vh = (struct _VectorHeader *)_vh;
 
   if(vh->size == size)
   {
@@ -95,9 +95,9 @@ void _VectorResize(void *_vh, void *_v, size_t size)
       printf("Error: Failed to reallocate\n");
     }
 
-    cur = v->data;
+    cur = (char *)v->data;
     cur += vh->size * vh->entrySize;
-    last = v->data;
+    last = (char *)v->data;
     last += size * vh->entrySize;
 
     while(cur != last)
@@ -112,15 +112,15 @@ void _VectorResize(void *_vh, void *_v, size_t size)
 
 size_t _VectorSize(void *_vh)
 {
-  struct _VectorHeader *vh = _vh;
+  struct _VectorHeader *vh = (struct _VectorHeader *)_vh;
 
   return vh->size;
 }
 
 void _VectorDelete(void *_vh, void *_v)
 {
-  struct _Vector *v = _v;
-  struct _VectorHeader *vh = _vh;
+  struct _Vector *v = (struct _Vector *)_v;
+  struct _VectorHeader *vh = (struct _VectorHeader *)_vh;
 
   if(v->vh != vh)
   {

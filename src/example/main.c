@@ -8,12 +8,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void on_error(char *cln, int code)
+void on_error(const char *cln, int code)
 {
   printf("Error Code: %i\n",code);
 }
 
-void on_success(char *cln, int count)
+void on_success(const char *cln, int count)
 {
   printf("Success Count: %i\n", count);
 }

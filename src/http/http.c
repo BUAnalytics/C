@@ -70,7 +70,7 @@ struct Http
   int status;
 };
 
-void HttpAddCustomHeader(struct Http *ctx, char *variable, char *value)
+void HttpAddCustomHeader(struct Http *ctx, const char *variable, const char *value)
 {
   struct CustomHeader ch = {0};
 
@@ -221,7 +221,7 @@ void _HttpPollConnect(struct Http *ctx)
       int optval = 0;
       int optlen = sizeof(optval);
 #ifdef USE_POSIX
-      if(getsockopt(sock, SOL_SOCKET, SO_ERROR, &optval, &optlen) == -1)
+      if(getsockopt(sock, SOL_SOCKET, SO_ERROR, &optval, (socklen_t *)&optlen) == -1)
 #endif
 #ifdef USE_WINSOCK
       if(getsockopt(sock, SOL_SOCKET, SO_ERROR, (char*)&optval, &optlen) == -1)

@@ -93,7 +93,7 @@ void sstream_push_char(struct sstream *ctx, char val)
   curr->next = nc;
 }
 
-void sstream_push_cstr(struct sstream *ctx, char *s)
+void sstream_push_cstr(struct sstream *ctx, const char *s)
 {
   struct Chunk *nc = NULL;
   struct Chunk *curr = NULL;
@@ -102,7 +102,7 @@ void sstream_push_cstr(struct sstream *ctx, char *s)
   if(len < 1) return;
 
   nc = palloc(struct Chunk);
-  nc->s = malloc(sizeof(char) * (len + 1));
+  nc->s = (char *)malloc(sizeof(char) * (len + 1));
   strcpy(nc->s, s);
   nc->len = len;
 
@@ -142,7 +142,7 @@ void sstream_collate(struct sstream *ctx)
   }
 
   allocSize++;
-  ns = malloc(allocSize * sizeof(char));
+  ns = (char *)malloc(allocSize * sizeof(char));
   ns[0] = '\0';
   curr = ctx->first;
 
@@ -176,7 +176,8 @@ char *sstream_cstr(struct sstream *ctx)
 {
   sstream_collate(ctx);
 
-  if(!ctx->first) return "";
+  /* TODO */
+  if(!ctx->first) return (char *)"";
 
   return ctx->first->s;
 }
@@ -222,7 +223,7 @@ void sstream_push_chars(struct sstream *ctx, char *values, size_t count)
 {
   char *tmp = NULL;
 
-  tmp = malloc(sizeof(char) * (count + 1));
+  tmp = (char *)malloc(sizeof(char) * (count + 1));
   tmp[count] = 0;
   memcpy(tmp, values, sizeof(char) * count);
   sstream_push_cstr(ctx, tmp);

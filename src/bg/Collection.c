@@ -18,7 +18,7 @@
 
 void bgUpdate();
 
-void bgCollectionCreate(char *cln)
+void bgCollectionCreate(const char *cln)
 {
   struct bgCollection* newCln = NULL;
 
@@ -38,7 +38,7 @@ void bgCollectionCreate(char *cln)
   bgUpdate();
 }
 
-void bgCollectionAdd(char *cln, struct bgDocument *doc)
+void bgCollectionAdd(const char *cln, struct bgDocument *doc)
 {
   struct bgCollection *col = bgCollectionGet(cln);
 
@@ -54,7 +54,7 @@ void bgCollectionAdd(char *cln, struct bgDocument *doc)
   bgUpdate();
 }
 
-void bgCollectionUpload(char *cln)
+void bgCollectionUpload(const char *cln)
 {
   /* For Serializing data */
   sstream *ser = sstream_new();
@@ -154,7 +154,7 @@ void bgCollectionDestroy(struct bgCollection *cln)
 /*  Helper function to get the collection from the state by name
  *  returns NULL if no collection by cln exists
  */
-struct bgCollection *bgCollectionGet(char *cln)
+struct bgCollection *bgCollectionGet(const char *cln)
 {
   /*
    * TODO - Change to comparing char* directly

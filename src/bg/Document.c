@@ -30,7 +30,7 @@ void bgDocumentDestroy(struct bgDocument *doc)
   pfree(doc);
 }
 
-void bgDocumentAddCStr(struct bgDocument *doc, char *path, char *val)
+void bgDocumentAddCStr(struct bgDocument *doc, const char *path, const char *val)
 {
   sstream* ctx = sstream_new();
   vector(sstream *) *out = vector_new(sstream *);
@@ -56,7 +56,7 @@ void bgDocumentAddCStr(struct bgDocument *doc, char *path, char *val)
   bgUpdate();
 }
 
-void bgDocumentAddInt(struct bgDocument *doc, char *path, int val)
+void bgDocumentAddInt(struct bgDocument *doc, const char *path, int val)
 {
   sstream* ctx = sstream_new();
   vector(sstream *) *out = vector_new(sstream *);
@@ -82,7 +82,7 @@ void bgDocumentAddInt(struct bgDocument *doc, char *path, int val)
   bgUpdate();
 }
 
-void bgDocumentAddDouble(struct bgDocument *doc, char *path, double val)
+void bgDocumentAddDouble(struct bgDocument *doc, const char *path, double val)
 {
   sstream* ctx = sstream_new();
   size_t i = 0;
@@ -107,7 +107,7 @@ void bgDocumentAddDouble(struct bgDocument *doc, char *path, double val)
   bgUpdate();
 }
 
-void bgDocumentAddBool(struct bgDocument *doc, char *path, int val)
+void bgDocumentAddBool(struct bgDocument *doc, const char *path, int val)
 {
   sstream* ctx = sstream_new();
   vector(sstream *) *out = vector_new(sstream *);

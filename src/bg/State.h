@@ -23,8 +23,8 @@ struct bgState
   time_t t;
 
   vector(struct bgCollection *) *collections;
-  void (*errorFunc)(char *cln, int code);
-  void (*successFunc)(char *cln, int count);
+  void (*errorFunc)(const char *cln, int code);
+  void (*successFunc)(const char *cln, int count);
 };
 
 extern struct bgState *bg;

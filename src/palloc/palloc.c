@@ -104,7 +104,7 @@ void pfree(void *ptr)
 #endif
 
 #ifdef PALLOC_ACTIVE
-void *_palloc(size_t size, char *type)
+void *_palloc(size_t size, const char *type)
 {
   struct PoolEntry *entry = poolHead;
 
@@ -161,7 +161,7 @@ void *_palloc(size_t size, char *type)
 #ifdef PALLOC_DEBUG
   printf("Allocating: %s\n", type);
 #endif
-  entry = calloc(1, sizeof(*entry));
+  entry = (struct PoolEntry *)calloc(1, sizeof(*entry));
   if(!entry) return NULL;
 
   entry->ptr = calloc(1, size);
@@ -173,7 +173,7 @@ void *_palloc(size_t size, char *type)
   }
 
   entry->size = size;
-  entry->type = calloc(strlen(type) + 1, sizeof(char));
+  entry->type = (char *)calloc(strlen(type) + 1, sizeof(char));
   strcpy(entry->type, type);
   entry->used = 1;
 

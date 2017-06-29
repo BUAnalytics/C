@@ -34,7 +34,7 @@ struct bgDocument;
  *   path: /api/v1
  *
  ******************************************************************************/
-void bgAuth(char *guid, char *key);
+void bgAuth(const char *guid, const char *key);
 
 /******************************************************************************
  * bgInterval
@@ -72,10 +72,10 @@ struct bgDocument *bgDocumentCreate();
  * with integers instead.
  *
  ******************************************************************************/
-void bgDocumentAddCStr(struct bgDocument *doc, char *path, char *val);
-void bgDocumentAddInt(struct bgDocument *doc, char *path, int val);
-void bgDocumentAddDouble(struct bgDocument *doc, char *path, double val);
-void bgDocumentAddBool(struct bgDocument *doc, char *path, int val);
+void bgDocumentAddCStr(struct bgDocument *doc, const char *path, const char *val);
+void bgDocumentAddInt(struct bgDocument *doc, const char *path, int val);
+void bgDocumentAddDouble(struct bgDocument *doc, const char *path, double val);
+void bgDocumentAddBool(struct bgDocument *doc, const char *path, int val);
 
 /******************************************************************************
  * bgCollectionCreate
@@ -85,7 +85,7 @@ void bgDocumentAddBool(struct bgDocument *doc, char *path, int val);
  * a collection if it already exists.
  *
  ******************************************************************************/
-void bgCollectionCreate(char *cln);
+void bgCollectionCreate(const char *cln);
 
 /******************************************************************************
  * bgCollectionAdd
@@ -96,7 +96,7 @@ void bgCollectionCreate(char *cln);
  * because it will be free'd as soon as it has been sent.
  *
  ******************************************************************************/
-void bgCollectionAdd(char *cln, struct bgDocument *doc);
+void bgCollectionAdd(const char *cln, struct bgDocument *doc);
 
 /******************************************************************************
  * bgCollectionUpload
@@ -105,7 +105,7 @@ void bgCollectionAdd(char *cln, struct bgDocument *doc);
  * ensure the documents added to the collection will also be free'd.
  *
  ******************************************************************************/
-void bgCollectionUpload(char *cln);
+void bgCollectionUpload(const char *cln);
 /*void bgCollectionsUpload();*/
 
 /******************************************************************************
@@ -115,8 +115,8 @@ void bgCollectionUpload(char *cln);
  * uploaded successfully or if an error has occurred.
  *
  ******************************************************************************/
-void bgErrorFunc(void (*errorFunc)(char *cln, int code));
-void bgSuccessFunc(void (*successFunc)(char *cln, int count));
+void bgErrorFunc(void (*errorFunc)(const char *cln, int code));
+void bgSuccessFunc(void (*successFunc)(const char *cln, int count));
 
 /******************************************************************************
  * bgCleanup
@@ -141,7 +141,7 @@ void bgCleanup();
 #define PALLOC_SENTINEL 0
 
 void pfree(void *ptr);
-void *_palloc(size_t size, char *type);
+void *_palloc(size_t size, const char *type);
 
 #define palloc(T) \
   (T*)_palloc(sizeof(T), #T)
@@ -169,7 +169,7 @@ struct _Vector
 #define vector(T) \
   T*
 
-void *_VectorNew(size_t size, char *type);
+void *_VectorNew(size_t size, const char *type);
 int _VectorOobAssert(void *_vh, size_t idx);
 void _VectorErase(void *_vh, void *_v, size_t idx);
 void _VectorResize(void *_vh, void *_v, size_t size);
@@ -249,7 +249,7 @@ void sstream_delete(struct sstream *ctx);
 void sstream_clear(struct sstream *ctx);
 size_t sstream_length(struct sstream *ctx);
 
-void sstream_push_cstr(struct sstream *ctx, char *s);
+void sstream_push_cstr(struct sstream *ctx, const char *s);
 void sstream_push_int(struct sstream *ctx, int val);
 void sstream_push_float(struct sstream *ctx, float val);
 void sstream_push_double(struct sstream *ctx, double val);
@@ -298,7 +298,7 @@ void HttpDestroy(struct Http *ctx);
 /*
 void HttpSetResponseTimeout(struct Http *ctx, int timeout);
 */
-void HttpAddCustomHeader(struct Http *ctx, char *variable, char *value);
+void HttpAddCustomHeader(struct Http *ctx, const char *variable, const char *value);
 
 void HttpRequest(struct Http *ctx, char *url, char *post);
 int HttpRequestComplete(struct Http *ctx);
@@ -565,7 +565,7 @@ struct bgCollection
 };
 
 void bgCollectionDestroy(struct bgCollection *cln);
-struct bgCollection *bgCollectionGet(char* cln);
+struct bgCollection *bgCollectionGet(const char* cln);
 
 #endif
 
@@ -614,8 +614,8 @@ struct bgState
   time_t t;
 
   vector(struct bgCollection *) *collections;
-  void (*errorFunc)(char *cln, int code);
-  void (*successFunc)(char *cln, int count);
+  void (*errorFunc)(const char *cln, int code);
+  void (*successFunc)(const char *cln, int count);
 };
 
 extern struct bgState *bg;

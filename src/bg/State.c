@@ -108,7 +108,7 @@ void bgUpdate()
   }
 }
 
-void bgAuth(char *guid, char *key)
+void bgAuth(const char *guid, const char *key)
 {
   bg = palloc(struct bgState);
   bg->collections = vector_new(struct bgCollection *);
@@ -165,12 +165,12 @@ void bgInterval(int milli)
   bg->interval = milli;
 }
 
-void bgErrorFunc(void (*errorFunc)(char *cln, int code))
+void bgErrorFunc(void (*errorFunc)(const char *cln, int code))
 {
   bg->errorFunc = errorFunc;
 }
 
-void bgSuccessFunc(void (*successFunc)(char *cln, int count))
+void bgSuccessFunc(void (*successFunc)(const char *cln, int count))
 {
   bg->successFunc = successFunc;
 }

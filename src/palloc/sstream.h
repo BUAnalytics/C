@@ -28,7 +28,7 @@ void sstream_delete(struct sstream *ctx);
 void sstream_clear(struct sstream *ctx);
 size_t sstream_length(struct sstream *ctx);
 
-void sstream_push_cstr(struct sstream *ctx, char *s);
+void sstream_push_cstr(struct sstream *ctx, const char *s);
 void sstream_push_int(struct sstream *ctx, int val);
 void sstream_push_float(struct sstream *ctx, float val);
 void sstream_push_double(struct sstream *ctx, double val);

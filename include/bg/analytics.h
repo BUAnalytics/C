@@ -31,7 +31,7 @@ struct bgDocument;
  *   path: /api/v1
  *
  ******************************************************************************/
-void bgAuth(char *guid, char *key);
+void bgAuth(const char *guid, const char *key);
 
 /******************************************************************************
  * bgInterval
@@ -69,10 +69,10 @@ struct bgDocument *bgDocumentCreate();
  * with integers instead.
  *
  ******************************************************************************/
-void bgDocumentAddCStr(struct bgDocument *doc, char *path, char *val);
-void bgDocumentAddInt(struct bgDocument *doc, char *path, int val);
-void bgDocumentAddDouble(struct bgDocument *doc, char *path, double val);
-void bgDocumentAddBool(struct bgDocument *doc, char *path, int val);
+void bgDocumentAddCStr(struct bgDocument *doc, const char *path, const char *val);
+void bgDocumentAddInt(struct bgDocument *doc, const char *path, int val);
+void bgDocumentAddDouble(struct bgDocument *doc, const char *path, double val);
+void bgDocumentAddBool(struct bgDocument *doc, const char *path, int val);
 
 /******************************************************************************
  * bgCollectionCreate
@@ -82,7 +82,7 @@ void bgDocumentAddBool(struct bgDocument *doc, char *path, int val);
  * a collection if it already exists.
  *
  ******************************************************************************/
-void bgCollectionCreate(char *cln);
+void bgCollectionCreate(const char *cln);
 
 /******************************************************************************
  * bgCollectionAdd
@@ -93,7 +93,7 @@ void bgCollectionCreate(char *cln);
  * because it will be free'd as soon as it has been sent.
  *
  ******************************************************************************/
-void bgCollectionAdd(char *cln, struct bgDocument *doc);
+void bgCollectionAdd(const char *cln, struct bgDocument *doc);
 
 /******************************************************************************
  * bgCollectionUpload
@@ -102,7 +102,7 @@ void bgCollectionAdd(char *cln, struct bgDocument *doc);
  * ensure the documents added to the collection will also be free'd.
  *
  ******************************************************************************/
-void bgCollectionUpload(char *cln);
+void bgCollectionUpload(const char *cln);
 /*void bgCollectionsUpload();*/
 
 /******************************************************************************
@@ -112,8 +112,8 @@ void bgCollectionUpload(char *cln);
  * uploaded successfully or if an error has occurred.
  *
  ******************************************************************************/
-void bgErrorFunc(void (*errorFunc)(char *cln, int code));
-void bgSuccessFunc(void (*successFunc)(char *cln, int count));
+void bgErrorFunc(void (*errorFunc)(const char *cln, int code));
+void bgSuccessFunc(void (*successFunc)(const char *cln, int count));
 
 /******************************************************************************
  * bgCleanup
