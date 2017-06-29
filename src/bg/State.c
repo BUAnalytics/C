@@ -43,6 +43,7 @@ void bgUpdate()
     int successes = 0;
     sstream *ser = sstream_new();
     sstream *url = sstream_new();
+
     /* Upload collections */
     for(i = 0; i < vector_size(bg->collections); i++)
     {
@@ -51,6 +52,10 @@ void bgUpdate()
       struct bgCollection* c = vector_at(bg->collections, i);
 
       //TODO continue if no data to send
+      if(vector_size(c->documents) == 0)
+      {
+        continue;
+      }
 
       if(HttpRequestComplete(c->http))
       {
@@ -59,12 +64,20 @@ void bgUpdate()
           bg->successFunc(sstream_cstr(c->name), c->lastDocumentCount);
         }
 
+        sstream_push_cstr(ser, "{\"documents\":[");
+
         /* Serializing documents of collection */
         for(j = 0; j < vector_size(c->documents); j++)
         {
           v = vector_at(c->documents, j)->rootVal;
           sstream_push_cstr(ser, json_serialize_to_string(v));
+          if(i < vector_size(c->documents)-1)
+          {
+            sstream_push_char(ser, ',');
+          }
         }
+
+        sstream_push_cstr(ser, "]}");
 
         sstream_clear(url);
         sstream_push_cstr(url, sstream_cstr(bg->fullUrl));
@@ -96,17 +109,25 @@ void bgAuth(char *guid, char *key)
   bg->collections = vector_new(struct bgCollection *);
   bg->interval = 2000;
 
-  bg->url = BG_URL;
-  bg->path = BG_PATH;
+  bg->url = sstream_new();
+  sstream_push_cstr(bg->url, BG_URL);
+
+  bg->path = sstream_new();
+  sstream_push_cstr(bg->path, BG_PATH);
 
   bg->fullUrl = sstream_new();
-  sstream_push_cstr(bg->fullUrl, bg->url);
-  sstream_push_cstr(bg->fullUrl, bg->path);
+  sstream_push_cstr(bg->fullUrl, sstream_cstr(bg->url));
+  sstream_push_cstr(bg->fullUrl, sstream_cstr(bg->path));
   sstream_push_cstr(bg->fullUrl, "/projects/collections/");
 
   //TODO move to sstream and delete guid+key
-  bg->guid = guid;
-  bg->key = key;
+  //bg->guid = guid;
+  //bg->key = key;
+  bg->guid = sstream_new();
+  sstream_push_cstr(bg->guid, guid);
+  
+  bg->key = sstream_new();
+  sstream_push_cstr(bg->key, key);
 }
 
 void bgCleanup()
@@ -123,11 +144,11 @@ void bgCleanup()
   }
   vector_delete(bg->collections);
 
-  pfree(bg->url);
-  pfree(bg->path);
+  sstream_delete(bg->url);
+  sstream_delete(bg->path);
   sstream_delete(bg->fullUrl);
-  pfree(bg->guid);
-  pfree(bg->key);
+  sstream_delete(bg->guid);
+  sstream_delete(bg->key);
 
   pfree(bg);
 }

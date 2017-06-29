@@ -14,11 +14,11 @@ struct bgState
   int interval;
   int intervalTimer;
 
-  char *url;
-  char *path;
+  struct sstream *url;
+  struct sstream *path;
   struct sstream *fullUrl;
-  char *guid;
-  char* key;
+  struct sstream *guid;
+  struct sstream *key;
 
   time_t t;
 

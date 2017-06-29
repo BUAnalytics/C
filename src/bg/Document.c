@@ -36,26 +36,9 @@ void bgDocumentAddCStr(struct bgDocument *doc, char *path, char *val)
   sstream* ctx = sstream_new();
   size_t i = 0;
   vector(sstream*) *out = vector_new(sstream*); 
-  
-  JSON_Status status = 5;
 
   sstream_push_cstr(ctx, path);
   sstream_split(ctx, '.', out);
- 
-  if(vector_size(out) == 0)
-  {
-    status = json_object_set_string(doc->rootObj, path, val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
-  else
-  {
-    status = json_object_dotset_string(doc->rootObj, path, val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
 
   sstream_delete(ctx);
   if(vector_size(out) > 0)
@@ -78,26 +61,9 @@ void bgDocumentAddInt(struct bgDocument *doc, char *path, int val)
   sstream* ctx = sstream_new();
   size_t i = 0;
   vector(sstream*) *out = vector_new(sstream*); 
-  
-  JSON_Status status = 5;
-  
+
   sstream_push_cstr(ctx, path);
   sstream_split(ctx, '.', out);
- 
-  if(vector_size(out) == 0)
-  {
-    status = json_object_set_number(doc->rootObj, path, (int)val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
-  else
-  {
-    status = json_object_dotset_number(doc->rootObj, path, (int)val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
 
   sstream_delete(ctx);
   if(vector_size(out) > 0)
@@ -121,25 +87,8 @@ void bgDocumentAddDouble(struct bgDocument *doc, char *path, double val)
   size_t i = 0;
   vector(sstream*) *out = vector_new(sstream*); 
   
-  JSON_Status status = 5;
-  
   sstream_push_cstr(ctx, path);
   sstream_split(ctx, '.', out);
- 
-  if(vector_size(out) == 0)
-  {
-    status = json_object_set_number(doc->rootObj, path, val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
-  else
-  {
-    status = json_object_dotset_number(doc->rootObj, path, val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
 
   sstream_delete(ctx);
   if(vector_size(out) > 0)
@@ -162,26 +111,9 @@ void bgDocumentAddBool(struct bgDocument *doc, char *path, int val)
   sstream* ctx = sstream_new();
   size_t i = 0;
   vector(sstream*) *out = vector_new(sstream*); 
-  
-  JSON_Status status = 5;
-  
+
   sstream_push_cstr(ctx, path);
   sstream_split(ctx, '.', out);
- 
-  if(vector_size(out) == 0)
-  {
-    status = json_object_set_boolean(doc->rootObj, path, val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
-  else
-  {
-    status = json_object_dotset_boolean(doc->rootObj, path, val);
-    printf("Status: ");
-    printf(path);
-    printf(" %d\n", status);
-  }
 
   sstream_delete(ctx);
   if(vector_size(out) > 0)
