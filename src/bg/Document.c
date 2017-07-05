@@ -39,6 +39,16 @@ void bgDocumentAddCStr(struct bgDocument *doc, const char *path, const char *val
   sstream_split(ctx, '.', out);
   sstream_delete(ctx);
 
+  if(vector_size(out) == 0)
+  {
+    status = json_object_set_string(doc->rootObj, path, val);
+  }
+  else
+  {
+    status = json_object_dotset_string(doc->rootObj, path, val);
+  }
+
+  
   if(vector_size(out) > 0)
   {
     size_t i = 0;
@@ -64,7 +74,16 @@ void bgDocumentAddInt(struct bgDocument *doc, const char *path, int val)
   sstream_push_cstr(ctx, path);
   sstream_split(ctx, '.', out);
   sstream_delete(ctx);
-
+  
+  if(vector_size(out) == 0)
+  {
+    status = json_object_set_string(doc->rootObj, path, val);
+  }
+  else
+  {
+    status = json_object_dotset_string(doc->rootObj, path, val);
+  }
+  
   if(vector_size(out) > 0)
   {
     size_t i = 0;
@@ -92,6 +111,15 @@ void bgDocumentAddDouble(struct bgDocument *doc, const char *path, double val)
   sstream_split(ctx, '.', out);
   sstream_delete(ctx);
 
+  if(vector_size(out) == 0)
+  {
+    status = json_object_set_string(doc->rootObj, path, val);
+  }
+  else
+  {
+    status = json_object_dotset_string(doc->rootObj, path, val);
+  }  
+  
   if(vector_size(out) > 0)
   {
     for(i = 0; i < vector_size(out); i++)
@@ -115,7 +143,16 @@ void bgDocumentAddBool(struct bgDocument *doc, const char *path, int val)
   sstream_push_cstr(ctx, path);
   sstream_split(ctx, '.', out);
   sstream_delete(ctx);
-
+  
+  if(vector_size(out) == 0)
+  {
+    status = json_object_set_string(doc->rootObj, path, val);
+  }
+  else
+  {
+    status = json_object_dotset_string(doc->rootObj, path, val);
+  }
+  
   if(vector_size(out) > 0)
   {
     size_t i = 0;
