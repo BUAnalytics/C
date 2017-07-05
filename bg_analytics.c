@@ -1507,11 +1507,11 @@ void bgDocumentAddCStr(struct bgDocument *doc, const char *path, const char *val
 
   if(vector_size(out) == 0)
   {
-    status = json_object_set_string(doc->rootObj, path, val);
+    json_object_set_string(doc->rootObj, path, val);
   }
   else
   {
-    status = json_object_dotset_string(doc->rootObj, path, val);
+    json_object_dotset_string(doc->rootObj, path, val);
   }
 
   
@@ -1543,11 +1543,11 @@ void bgDocumentAddInt(struct bgDocument *doc, const char *path, int val)
   
   if(vector_size(out) == 0)
   {
-    status = json_object_set_string(doc->rootObj, path, val);
+    json_object_set_number(doc->rootObj, path, val);
   }
   else
   {
-    status = json_object_dotset_string(doc->rootObj, path, val);
+    json_object_dotset_number(doc->rootObj, path, val);
   }
   
   if(vector_size(out) > 0)
@@ -1579,11 +1579,11 @@ void bgDocumentAddDouble(struct bgDocument *doc, const char *path, double val)
 
   if(vector_size(out) == 0)
   {
-    status = json_object_set_string(doc->rootObj, path, val);
+    json_object_set_number(doc->rootObj, path, val);
   }
   else
   {
-    status = json_object_dotset_string(doc->rootObj, path, val);
+    json_object_dotset_number(doc->rootObj, path, val);
   }  
   
   if(vector_size(out) > 0)
@@ -1612,11 +1612,11 @@ void bgDocumentAddBool(struct bgDocument *doc, const char *path, int val)
   
   if(vector_size(out) == 0)
   {
-    status = json_object_set_string(doc->rootObj, path, val);
+    json_object_set_boolean(doc->rootObj, path, val);
   }
   else
   {
-    status = json_object_dotset_string(doc->rootObj, path, val);
+    json_object_dotset_boolean(doc->rootObj, path, val);
   }
   
   if(vector_size(out) > 0)
