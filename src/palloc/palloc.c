@@ -183,7 +183,7 @@ void *_palloc(size_t size, const char *type)
   return entry->ptr;
 }
 #else
-void *_palloc(size_t size, char *type)
+void *_palloc(size_t size, const char *type)
 {
   void *rtn = NULL;
 
