@@ -1214,7 +1214,7 @@ void HttpRequest(struct Http *ctx, char *url, char *post)
 #endif
 #ifdef USE_WINSOCK
     {
-    unsigned nonblocking = 1;
+    unsigned long nonblocking = 1;
     ioctlsocket(sock, FIONBIO, &nonblocking);
     }
 #endif
@@ -3748,6 +3748,7 @@ void bgUpdate()
 
     /* Cleaning up sstream */
     sstream_delete(ser);
+    sstream_delete(url);
 
     /* Resetting intervalTimer */
     bg->intervalTimer = bg->interval;

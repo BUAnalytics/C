@@ -615,7 +615,7 @@ void HttpRequest(struct Http *ctx, char *url, char *post)
 #endif
 #ifdef USE_WINSOCK
     {
-    unsigned nonblocking = 1;
+    unsigned long nonblocking = 1;
     ioctlsocket(sock, FIONBIO, &nonblocking);
     }
 #endif

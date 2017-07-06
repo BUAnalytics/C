@@ -3,9 +3,9 @@
 
 #include <stdlib.h>
 
-//#define PALLOC_DEBUG 
+/*#define PALLOC_DEBUG*/
 #define PALLOC_ACTIVE
-#define PALLOC_SENTINEL 0
+#define PALLOC_SENTINEL 1
 
 void pfree(void *ptr);
 void *_palloc(size_t size, const char *type);

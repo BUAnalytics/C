@@ -103,6 +103,7 @@ void bgUpdate()
 
     /* Cleaning up sstream */
     sstream_delete(ser);
+    sstream_delete(url);
 
     /* Resetting intervalTimer */
     bg->intervalTimer = bg->interval;
