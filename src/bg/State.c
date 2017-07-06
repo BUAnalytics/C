@@ -31,10 +31,7 @@ void bgUpdate()
   /* Polling collections http connections to push through data */
   for(i = 0; i < vector_size(bg->collections); i++)
   {
-    if(vector_at(bg->collections, i))
-    {
-      HttpRequestComplete(vector_at(bg->collections, i)->http);
-    }
+    HttpRequestComplete(vector_at(bg->collections, i)->http);
   }
 
   /* Pushing data if interval is done */
@@ -66,6 +63,10 @@ void bgUpdate()
             bg->successFunc(sstream_cstr(c->name), c->lastDocumentCount);
           }
         }
+        else if(bg->errorFunc)
+        {
+          bg->errorFunc(sstream_cstr(c->name), HttpResponseStatus(c->http));
+        }
 
         sstream_push_cstr(ser, "{\"documents\":[");
 
@@ -74,7 +75,7 @@ void bgUpdate()
         {
           v = vector_at(c->documents, j)->rootVal;
           sstream_push_cstr(ser, json_serialize_to_string(v));
-          if(i < vector_size(c->documents)-1)
+          if(j < vector_size(c->documents)-1)
           {
             sstream_push_char(ser, ',');
           }
@@ -113,6 +114,7 @@ void bgAuth(const char *guid, const char *key)
   bg = palloc(struct bgState);
   bg->collections = vector_new(struct bgCollection *);
   bg->interval = 2000;
+  bg->t = time(NULL);
 
   bg->url = sstream_new();
   sstream_push_cstr(bg->url, BG_URL);
