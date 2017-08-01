@@ -5,6 +5,8 @@
   #include <palloc/vector.h>
 #endif
 
+#include <time.h>
+
 struct bgCollection;
 struct sstream;
 
